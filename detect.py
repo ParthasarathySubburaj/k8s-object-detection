@@ -1,6 +1,13 @@
 from torchvision import transforms
-from utils import *
 from PIL import Image, ImageDraw, ImageFont
+
+import matplotlib.patches as patches
+from matplotlib.ticker import NullLocator
+
+from yolo_models import *
+from utils import *
+from torch.autograd import Variable
+
 
 DEVICE = torch.device("cpu")
 
@@ -69,12 +76,7 @@ class SSDModel:
             box_location = det_boxes[i].tolist()
             draw.rectangle(xy=box_location, outline=label_color_map[det_labels[i]])
             draw.rectangle(xy=[l + 1. for l in box_location], outline=label_color_map[
-                det_labels[i]])  # a second rectangle at an offset of 1 pixel to increase line thickness
-            # draw.rectangle(xy=[l + 2. for l in box_location], outline=label_color_map[
-            #     det_labels[i]])  # a third rectangle at an offset of 1 pixel to increase line thickness
-            # draw.rectangle(xy=[l + 3. for l in box_location], outline=label_color_map[
-            #     det_labels[i]])  # a fourth rectangle at an offset of 1 pixel to increase line thickness
-
+                det_labels[i]])
             # Text
             text_size = font.getsize(det_labels[i].upper())
             text_location = [box_location[0] + 2., box_location[1] - text_size[1]]
@@ -86,9 +88,55 @@ class SSDModel:
         return annotated_image, det_labels
 
 
+class YOLOV3:
+    def __init__(self, model_config_path, weights_path, class_names):
+        self.model_config_path = model_config_path
+        self.model_weights_path = weights_path
+        self.model = Darknet(self.model_config_path).to(device)
+        self.model.load_darknet_weights(self.model_weights_path)
+        self.model.eval()
+        self.classes = load_classes(class_names)
+
+    def detect(self, image, min_score=0.6, nms_threshold=0.5):
+
+        Tensor = torch.FloatTensor
+        # image = image.resize((416, 416))
+        input_imgs = Variable(transforms.ToTensor()(image).unsqueeze_(0).type(Tensor))
+        with torch.no_grad():
+            detections = self.model(input_imgs)
+            detections = non_max_suppression(detections, min_score, nms_threshold)
+
+        if detections is not None:
+            # Rescale boxes to original image
+            detections = rescale_boxes(detections[0], image.size[:2])
+            # Annotate
+            annotated_image = image
+            draw = ImageDraw.Draw(annotated_image)
+            font = ImageFont.load_default()
+            det_labels = []
+            for box_details in detections:
+                box_location = box_details.tolist()[0:4]
+                cls_pred = box_details.tolist()[-1]
+                det_labels.append(self.classes[int(cls_pred)])
+                draw.rectangle(xy=box_location, outline=coco_label_color_map[self.classes[int(cls_pred)]])
+                draw.rectangle(xy=[l + 1. for l in box_location], outline=coco_label_color_map[self.classes[int(cls_pred)]])
+
+                # Text
+                text_size = font.getsize(self.classes[int(cls_pred)].upper())
+                text_location = [box_location[0] + 2., box_location[1] - text_size[1]]
+                textbox_location = [box_location[0], box_location[1] - text_size[1],
+                                    box_location[0] + text_size[0] + 4.,
+                                    box_location[1]]
+                draw.rectangle(xy=textbox_location, fill=coco_label_color_map[self.classes[int(cls_pred)]])
+                draw.text(xy=text_location, text=self.classes[int(cls_pred)].upper(), fill='white', font=font)
+            del draw
+            annotated_image = annotated_image.resize((416,416))
+            return annotated_image, det_labels
+
+
 if __name__ == '__main__':
     img_path = './img/test2.jpg'
     det = SSDModel('checkpoint_ssd300.pth.tar')
     image = Image.open(img_path, mode='r')
     image = image.convert('RGB')
-    det.detect(image, min_score=0.8, max_overlap=0.5, top_k=200).show()
+    det.detect(image, min_score=0.8, max_overlap=0.5, top_k=200)
