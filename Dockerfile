@@ -20,5 +20,5 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
 COPY . /streamlit_app/
-EXPOSE 8000
+EXPOSE 7500
 WORKDIR /streamlit_app/

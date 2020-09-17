@@ -1,9 +1,6 @@
 from torchvision import transforms
 from PIL import Image, ImageDraw, ImageFont
 
-import matplotlib.patches as patches
-from matplotlib.ticker import NullLocator
-
 from yolo_models import *
 from utils import *
 from torch.autograd import Variable
@@ -65,7 +62,7 @@ class SSDModel:
         # Annotate
         annotated_image = image
         draw = ImageDraw.Draw(annotated_image)
-        font = ImageFont.load_default()
+        font = ImageFont.truetype("./arial.ttf", 15)
         # Suppress specific classes, if needed
         for i in range(det_boxes.size(0)):
             if suppress is not None:
@@ -112,7 +109,7 @@ class YOLOV3:
             # Annotate
             annotated_image = image
             draw = ImageDraw.Draw(annotated_image)
-            font = ImageFont.load_default()
+            font = ImageFont.truetype("./arial.ttf", 15)
             det_labels = []
             for box_details in detections:
                 box_location = box_details.tolist()[0:4]

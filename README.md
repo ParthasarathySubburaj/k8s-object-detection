@@ -1,1 +1,1 @@
-## This is a sample model 
+###  A Tutorial on deploying object detection models on Kubernetes 

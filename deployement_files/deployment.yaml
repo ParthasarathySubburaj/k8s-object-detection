@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: object-detection-deployment
+  namespace: partha
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: object-detection
+  template:
+    metadata:
+      labels:
+        app: object-detection
+    spec:
+      containers:
+      - name: object-detection-container
+        image: parthasarathysubburaj/k8s-object-detection:v1
+        command: ['streamlit', 'run', 'app.py', '--server.port', '$(SL_PORT)', '--server.enableCORS', '$(SL_ENABLE_CORS)', '--server.baseUrlPath', '$(SL_BASE_URL)', '--server.address', '$(SL_SERVER_ADDRESS)']
+        env:
+          - name: SSD_MODEL_PATH
+            valueFrom:
+              configMapKeyRef:
+                name: object-detection-config-map
+                key: ssd_model_path
+          - name: YOLO_MODEL_PATH
+            valueFrom:
+              configMapKeyRef:
+                name: object-detection-config-map
+                key: yolo_model_path
+          - name: SL_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: object-detection-config-map
+                key: streamlit_port
+          - name: SL_SERVER_ADDRESS
+            valueFrom:
+              configMapKeyRef:
+                name: object-detection-config-map
+                key: streamlit_server_address
+          - name: SL_BASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: object-detection-config-map
+                key: base_url
+          - name: SL_ENABLE_CORS
+            valueFrom:
+              configMapKeyRef:
+                name: object-detection-config-map
+                key: streamlit_enable_cors
+        ports:
+        - containerPort: 7500
+        volumeMounts:
+          - mountPath: "/workspace"
+            name: pv-storage
+      imagePullSecrets:
+        - name: docker-registry-creds
+      volumes:
+        - name: pv-storage
+          persistentVolumeClaim:
+            claimName: object-detection-model-weights

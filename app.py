@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from PIL import Image
 import streamlit as st
@@ -12,24 +13,31 @@ st.beta_set_page_config(
 
 readme_text = st.markdown(open("README.md").read())
 
+image = Image.open("./img/logo.png", mode='r')
+image = image.resize((682, 185))
+k8s_logo = st.image(image)
+
 
 @st.cache
 def load_ssd_model():
-    ssd_model = SSDModel('checkpoint_ssd300.pth.tar')
+    ssd_path = os.getenv("SSD_MODEL_PATH")
+    ssd_model = SSDModel(ssd_path)
     print("Loading SSD model...")
     return ssd_model
 
+
 @st.cache
 def load_yolov3_model():
-    yolov3_model = YOLOV3("config/yolov3.cfg", "weights/yolov3.weights", "data/coco.names")
+    yolo_path = os.getenv("YOLO_MODEL_PATH")
+    yolov3_model = YOLOV3("config/yolov3.cfg", yolo_path, "data/coco.names")
     print("Loading YOLOV3 model...")
     return yolov3_model
 
+
 def main():
     st.set_option('deprecation.showfileUploaderEncoding', False)
-
-    st.sidebar.title("What to do")
-    app_mode = st.sidebar.selectbox("Choose the app mode", ["None", "SSD", "YOLOV3"])
+    st.sidebar.title("Model selector")
+    app_mode = st.sidebar.selectbox("Choose a model", ["None", "SSD", "YOLOV3"])
     if app_mode == "SSD":
         run_model_ssd()
     elif app_mode == "YOLOV3":
@@ -38,6 +46,7 @@ def main():
 
 def run_model_ssd():
     readme_text.empty()
+    k8s_logo.empty()
     st.markdown("SSD DETECTOR")
     ssd_model = load_ssd_model()
     img_file_buffer = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
@@ -59,6 +68,7 @@ def run_model_ssd():
 
 def run_model_yolov3():
     readme_text.empty()
+    k8s_logo.empty()
     st.markdown("YOLO V3 DETECTOR")
     yolov3_model = load_yolov3_model()
     img_file_buffer = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
