@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: object-detection-ingress
+  namespace: partha
+spec:
+  rules:
+  - host: streamlit.exercise.com
+    http:
+      paths:
+      - backend:
+          serviceName: object-detection-service
+          servicePort: 7500
