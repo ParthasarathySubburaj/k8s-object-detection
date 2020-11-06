@@ -2,6 +2,7 @@ FROM ubuntu:18.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+#Linux dependencies
 RUN apt-get update && apt-get install -y \
 	build-essential \
 	python3.6 \
@@ -9,6 +10,7 @@ RUN apt-get update && apt-get install -y \
 	python3-pip \
 	&& apt-get clean
 
+#Python dependencies
 RUN pip3 install --no-cache\
 	numpy==1.18.4 \
 	Pillow==7.2.0 \
