@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: object-detection-config-map
+  namespace: partha
+data:
+  ssd_model_path: "/workspace/model-weights/ssd/checkpoint_ssd300.pth.tar"
+  yolo_model_path: "/workspace/model-weights/yolo/yolov3.weights"
+  base_url: "kubernetes-object-detection"
+  streamlit_enable_cors: "True"
+  streamlit_port: "7500"
+  streamlit_server_address: "0.0.0.0"

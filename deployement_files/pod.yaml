@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-base
+  namespace: partha
+spec:
+  containers:
+  - name: ubuntu-base-container
+    image: ubuntu:18.04
+    command: ['sh', '-c', 'echo "Hello, Kubernetes!" && sleep 3600']
+    volumeMounts:
+        - mountPath: "/workspace"
+          name: pv-storage 
+  imagePullSecrets:
+  - name: docker-registry-creds
+  volumes:
+    - name: pv-storage
+      persistentVolumeClaim:
+        claimName: object-detection-model-weights
